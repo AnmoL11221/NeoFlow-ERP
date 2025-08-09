@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../root";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -14,9 +14,7 @@ export const projectRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      // TODO: Get actual user ID from session when NextAuth is implemented
-      // For now, using the demo user ID from seeded data
-      const userId = "cmdu8lwww0000s6oe5byj9diz";
+      const userId = ctx.session!.user.id;
 
       const project = await prisma.project.create({
         data: {
@@ -39,10 +37,12 @@ export const projectRouter = createTRPCRouter({
         clientId: z.string().min(1, "Client ID is required"),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      const userId = ctx.session!.user.id;
       const projects = await prisma.project.findMany({
         where: {
           clientId: input.clientId,
+          userId,
         },
         include: {
           client: true,
@@ -87,7 +87,8 @@ export const projectRouter = createTRPCRouter({
         status: z.enum(["PROPOSED", "ACTIVE", "COMPLETED", "PAUSED"]),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.session!.user.id;
       const project = await prisma.project.update({
         where: {
           id: input.projectId,

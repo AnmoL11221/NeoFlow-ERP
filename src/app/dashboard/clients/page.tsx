@@ -11,13 +11,8 @@ import {
 } from "~/components/ui/table";
 import { api } from "~/trpc/client";
 
-export default function ProjectsPage() {
-  // For now, using a sample client ID. This will be dynamic later
-  const sampleClientId = "client-1";
-  
-  const { data: projects, isLoading, error } = api.project.getAllByClient.useQuery({
-    clientId: sampleClientId,
-  });
+export default function ClientsPage() {
+  const { data: clients, isLoading, error } = api.client.getAll.useQuery();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -26,8 +21,8 @@ export default function ProjectsPage() {
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-              <p className="text-gray-600 mt-1">Manage your projects and track their progress</p>
+              <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
+              <p className="text-gray-600 mt-1">Manage your client relationships and contact information</p>
             </div>
             <div className="flex items-center space-x-4">
               <button className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors">
@@ -35,11 +30,11 @@ export default function ProjectsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
                 </svg>
               </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+              <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
                 <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                New Project
+                Add Client
               </button>
             </div>
           </div>
@@ -54,9 +49,27 @@ export default function ProjectsPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Projects</p>
+                  <p className="text-sm font-medium text-gray-600">Total Clients</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {projects ? projects.length : 0}
+                    {clients ? clients.length : 0}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Active Projects</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {clients ? clients.reduce((sum, client) => sum + client.projects.length, 0) : 0}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -72,14 +85,18 @@ export default function ProjectsPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Active</p>
+                  <p className="text-sm font-medium text-gray-600">Total Revenue</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {projects ? projects.filter(p => p.status === 'ACTIVE').length : 0}
+                    ${clients ? clients.reduce((sum, client) => 
+                      sum + client.projects.reduce((pSum, project) => 
+                        pSum + (project.estimatedCost || 0), 0
+                      ), 0
+                    ).toLocaleString() : 0}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                   </svg>
                 </div>
               </div>
@@ -90,32 +107,19 @@ export default function ProjectsPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Completed</p>
+                  <p className="text-sm font-medium text-gray-600">New This Month</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {projects ? projects.filter(p => p.status === 'COMPLETED').length : 0}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Value</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ${projects ? projects.reduce((sum, p) => sum + (p.estimatedCost || 0), 0).toLocaleString() : 0}
+                    {clients ? clients.filter(client => {
+                      const createdAt = new Date(client.createdAt);
+                      const now = new Date();
+                      return createdAt.getMonth() === now.getMonth() && 
+                             createdAt.getFullYear() === now.getFullYear();
+                    }).length : 0}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                   <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                 </div>
               </div>
@@ -123,17 +127,17 @@ export default function ProjectsPage() {
           </Card>
         </div>
 
-        {/* Projects Table */}
+        {/* Clients Table */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg">All Projects</CardTitle>
+            <CardTitle className="text-lg">All Clients</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                  <span className="text-gray-600">Loading projects...</span>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                  <span className="text-gray-600">Loading clients...</span>
                 </div>
               </div>
             ) : error ? (
@@ -144,56 +148,60 @@ export default function ProjectsPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <p className="text-red-600 font-medium">Error loading projects</p>
+                  <p className="text-red-600 font-medium">Error loading clients</p>
                   <p className="text-gray-600 text-sm mt-1">{error.message}</p>
                 </div>
               </div>
-            ) : projects && projects.length > 0 ? (
+            ) : clients && clients.length > 0 ? (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-gray-100">
-                      <TableHead className="font-semibold text-gray-900">Project Name</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Client</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Status</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Estimated Cost</TableHead>
+                      <TableHead className="font-semibold text-gray-900">Client Name</TableHead>
+                      <TableHead className="font-semibold text-gray-900">Email</TableHead>
+                      <TableHead className="font-semibold text-gray-900">Projects</TableHead>
+                      <TableHead className="font-semibold text-gray-900">Total Value</TableHead>
                       <TableHead className="font-semibold text-gray-900">Created</TableHead>
                       <TableHead className="font-semibold text-gray-900">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {projects.map((project) => (
-                      <TableRow key={project.id} className="hover:bg-gray-50 transition-colors">
+                    {clients.map((client) => (
+                      <TableRow key={client.id} className="hover:bg-gray-50 transition-colors">
                         <TableCell className="font-medium text-gray-900">
                           <div>
-                            <div className="font-semibold">{project.name}</div>
-                            <div className="text-sm text-gray-600 mt-1 line-clamp-2">
-                              {project.description.substring(0, 60)}...
+                            <div className="font-semibold">{client.name}</div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {client.projects.length} project{client.projects.length !== 1 ? 's' : ''}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="text-gray-600">
-                          {project.client?.name || 'Unknown Client'}
+                          {client.email}
                         </TableCell>
                         <TableCell>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            project.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                            project.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
-                            project.status === 'PAUSED' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {project.status}
-                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {client.projects.slice(0, 2).map((project) => (
+                              <span key={project.id} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {project.name.substring(0, 20)}...
+                              </span>
+                            ))}
+                            {client.projects.length > 2 && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                +{client.projects.length - 2} more
+                              </span>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-gray-600">
-                          {project.estimatedCost ? `$${project.estimatedCost.toLocaleString()}` : 'Not set'}
+                          ${client.projects.reduce((sum, project) => sum + (project.estimatedCost || 0), 0).toLocaleString()}
                         </TableCell>
                         <TableCell className="text-gray-600">
-                          {new Date(project.createdAt).toLocaleDateString()}
+                          {new Date(client.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
-                            <button className="p-1 text-gray-400 hover:text-blue-600 transition-colors">
+                            <button className="p-1 text-gray-400 hover:text-purple-600 transition-colors">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -220,16 +228,16 @@ export default function ProjectsPage() {
               <div className="text-center py-12">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
-                <p className="text-gray-600 mb-6">Get started by creating your first project.</p>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No clients found</h3>
+                <p className="text-gray-600 mb-6">Get started by adding your first client.</p>
+                <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
                   <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  Create Project
+                  Add Client
                 </button>
               </div>
             )}

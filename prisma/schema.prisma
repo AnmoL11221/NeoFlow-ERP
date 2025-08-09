@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -43,7 +43,7 @@ model Client {
 model Project {
   id            String        @id @default(cuid())
   name          String
-  description   String        @db.Text
+  description   String
   status        ProjectStatus @default(PROPOSED)
   estimatedCost Float?
   actualCost    Float?

@@ -15,7 +15,8 @@ export const projectRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       // TODO: Get actual user ID from session when NextAuth is implemented
-      const userId = "temp-user-id";
+      // For now, using the demo user ID from seeded data
+      const userId = "cmdu8lwww0000s6oe5byj9diz";
 
       const project = await prisma.project.create({
         data: {

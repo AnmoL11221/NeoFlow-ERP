@@ -14,7 +14,8 @@ export const clientRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       // TODO: Get actual user ID from session when NextAuth is implemented
-      const userId = "temp-user-id";
+      // For now, using the demo user ID from seeded data
+      const userId = "cmdu8lwww0000s6oe5byj9diz";
 
       const client = await prisma.client.create({
         data: {
@@ -29,7 +30,8 @@ export const clientRouter = createTRPCRouter({
 
   getAll: protectedProcedure.query(async ({ ctx }) => {
     // TODO: Get actual user ID from session when NextAuth is implemented
-    const userId = "temp-user-id";
+    // For now, using the demo user ID from seeded data
+    const userId = "cmdu8lwww0000s6oe5byj9diz";
 
     const clients = await prisma.client.findMany({
       where: {

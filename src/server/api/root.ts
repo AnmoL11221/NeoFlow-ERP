@@ -5,6 +5,7 @@ import { ZodError } from "zod";
 
 import { projectRouter } from "./routers/project";
 import { clientRouter } from "./routers/client";
+import { invoiceRouter } from "./routers/invoice";
 
 /**
  * 1. CONTEXT
@@ -123,6 +124,7 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 export const appRouter = createTRPCRouter({
   project: projectRouter,
   client: clientRouter,
+  invoice: invoiceRouter,
 });
 
 // export type definition of API

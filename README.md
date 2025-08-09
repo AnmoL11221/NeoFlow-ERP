@@ -88,10 +88,10 @@ npm run dev
 - Or use “Continue with Google/GitHub” (after configuring provider envs)
 
 ### OAuth setup
-- Google
+- **Google**
   - Create OAuth Client (Web) in Google Cloud Console
   - Authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
-- GitHub
+- **GitHub**
   - Create OAuth App in GitHub settings
   - Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
 
@@ -129,10 +129,47 @@ src/
    └─ auth.ts                       # Legacy JWT utils (not used by NextAuth)
 ```
 
+## 🗄️ Database Schema
+
+### Core Models
+- **User**: Freelancer accounts (with `passwordHash`, optional OAuth `Account`)
+- **Client**: Belongs to `User`; has many `Project`
+- **Project**: Belongs to `User` and `Client`; status enum (PROPOSED, ACTIVE, COMPLETED, PAUSED)
+- **Invoice**: Belongs to `User` and `Project`; status enum (DRAFT, SENT, PAID, OVERDUE)
+- **Account** / **VerificationToken**: NextAuth adapter models
+
+### Key Features
+- Proper foreign keys with cascade
+- Enums for statuses
+- Created/updated timestamps
+
 ## 🔌 API Endpoints (tRPC)
 - `project.create`, `project.getAllByClient`, `project.getById`, `project.updateStatus`
 - `client.create`, `client.getAll`
 - `invoice.create`, `invoice.getAll`, `invoice.getById`, `invoice.updateStatus`
+
+## 🎯 Usage Examples
+
+### Create a new project (client)
+```ts
+import { api } from "~/trpc/client";
+
+const createProject = api.project.create.useMutation();
+createProject.mutate({
+  name: "Website Redesign",
+  description: "Modern responsive website for a startup",
+  clientId: "client-1",
+});
+```
+
+### Generate an AI proposal (server action)
+```ts
+import { generateProposalScope } from "~/app/actions/generateProposal";
+
+const proposal = await generateProposalScope(
+  "Build an e-commerce platform with payments and admin dashboard"
+);
+```
 
 ## 🧯 Troubleshooting
 - Peer dependency conflicts:
@@ -149,6 +186,52 @@ src/
 ## 🚀 Deployment
 - Set env vars (same names) in your hosting provider (e.g., Vercel)
 - Switch database to Postgres by updating `datasource db` in `prisma/schema.prisma` and setting `DATABASE_URL`
+- Run `npx prisma migrate deploy` during build
+
+## 🤝 Contributing
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feat/awesome`
+3. Commit: `git commit -m "feat: add awesome thing"`
+4. Push: `git push origin feat/awesome`
+5. Open a Pull Request
+
+## 📝 Development
+
+### Scripts
+- `npm run dev` – Start dev server
+- `npm run build` – Build for production
+- `npm run start` – Start production server
+- `npm run lint` – Lint
+- `npm run db:seed` – Seed database
+
+### Prisma
+- `npx prisma db push` – Sync schema (dev)
+- `npx prisma migrate dev` – Create/apply migration
+- `npx prisma studio` – DB GUI
+
+### Adding Features
+1. Update `prisma/schema.prisma` if needed
+2. Add tRPC procedures under `src/server/api/routers/`
+3. Consume via `~/trpc/client` hooks in UI
+4. Add pages in `src/app/`
+
+## 🔮 Roadmap
+- Auth polish: email verification, password reset
+- Project creation wizard & proposal editor
+- Invoice PDF generation & payments integration
+- Analytics dashboards
+- Time tracking & expenses
+- Multi-currency & advanced reporting
+
+## 📄 License
+MIT
+
+## 🆘 Support
+- Issues: GitHub Issues
+- Discussions: GitHub Discussions
+
+## 🙏 Acknowledgments
+- Next.js, Prisma, tRPC, shadcn/ui, NextAuth, OpenAI
 
 ---
 

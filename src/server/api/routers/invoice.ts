@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../root";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -16,9 +16,7 @@ export const invoiceRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      // TODO: Get actual user ID from session when NextAuth is implemented
-      // For now, using the demo user ID from seeded data
-      const userId = "cmdu8lwww0000s6oe5byj9diz";
+      const userId = ctx.session!.user.id;
 
       const invoice = await prisma.invoice.create({
         data: {
@@ -42,9 +40,7 @@ export const invoiceRouter = createTRPCRouter({
     }),
 
   getAll: protectedProcedure.query(async ({ ctx }) => {
-    // TODO: Get actual user ID from session when NextAuth is implemented
-    // For now, using the demo user ID from seeded data
-    const userId = "cmdu8lwww0000s6oe5byj9diz";
+    const userId = ctx.session!.user.id;
 
     const invoices = await prisma.invoice.findMany({
       where: {

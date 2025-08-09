@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { TRPCProvider } from "~/components/providers/trpc-provider";
+import { AppProvider } from "~/components/providers/app-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,8 +18,6 @@ export const metadata: Metadata = {
   description: "AI-native ERP for freelancers to scope projects, get paid, and understand financial health",
 };
 
-
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,12 +25,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <TRPCProvider>
-          {children}
-        </TRPCProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <AppProvider>{children}</AppProvider>
       </body>
     </html>
   );

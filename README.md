@@ -11,294 +11,145 @@ NeoFlow ERP is an AI-native enterprise resource planning system designed specifi
 
 ## 🚀 Features
 
-### 📊 **Project Management**
-- **Smart Project Scoping**: AI-powered project proposal generation
-- **Status Tracking**: Monitor projects from proposal to completion
-- **Client Management**: Organize and track client relationships
-- **Cost Estimation**: Track estimated vs actual project costs
+### 📊 Project Management
+- Smart scoping, status tracking, client relationships
+- Cost tracking: estimated vs actual
 
-### 💰 **Financial Health**
-- **Invoice Management**: Create and track invoices with automated status updates
-- **Payment Tracking**: Monitor payment status and overdue invoices
-- **Profitability Analysis**: Understand your business performance
-- **Revenue Forecasting**: Predict future income based on current projects
+### 💰 Financial Health
+- Invoice creation and tracking
+- Payments and overdue insights
 
-### 🤖 **AI-Powered Features**
-- **Proposal Generation**: Transform project descriptions into professional proposals
-- **Risk Assessment**: Identify potential project ambiguities and risks
-- **Timeline Estimation**: AI-generated project timelines and milestones
-- **Smart Recommendations**: Data-driven insights for better decision making
+### 🤖 AI Features
+- Proposal generation with OpenAI
 
-### 🎨 **Modern UI/UX**
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
-- **Dark/Light Mode**: Built-in theme support
-- **Real-time Updates**: Live data synchronization
-- **Intuitive Navigation**: Clean, modern interface
+### 🎨 Modern UI
+- Responsive design, clean components, shadcn/ui
 
 ## 🛠️ Tech Stack
-
-- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Database**: [PostgreSQL](https://www.postgresql.org/) with [Prisma ORM](https://www.prisma.io/)
-- **API**: [tRPC](https://trpc.io/) for type-safe APIs
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
-- **AI Integration**: [OpenAI GPT-4](https://openai.com/)
-- **Authentication**: [NextAuth.js](https://next-auth.js.org/) (planned)
+- Next.js 15 (App Router), TypeScript
+- Prisma ORM (SQLite dev by default; Postgres-ready)
+- tRPC v11 (typed API)
+- Tailwind CSS + shadcn/ui
+- NextAuth (OAuth + Credentials)
 
 ## 📦 Installation
 
-### Prerequisites
+### 1) Install dependencies
+```bash
+npm install --legacy-peer-deps
+```
+> Tip: We use `--legacy-peer-deps` to bypass the OpenAI/Zod peer conflict.
 
-- Node.js 18+ 
-- PostgreSQL database
-- OpenAI API key (for AI features)
+### 2) Environment variables
+Create `.env.local` (not committed) with:
+```env
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-generated-secret
 
-### Quick Start
+# OAuth providers (optional but recommended)
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GITHUB_CLIENT_ID=...
+GITHUB_CLIENT_SECRET=...
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd neoflo-erp
-   ```
+# AI
+OPENAI_API_KEY=...
+```
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+Also add placeholders to `.env.example` if you share the repo.
 
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` with your configuration:
-   ```env
-   # Database
-   DATABASE_URL="postgresql://username:password@localhost:5432/neoflo_erp"
-   
-   # OpenAI API Key for AI features
-   OPENAI_API_KEY="your-openai-api-key-here"
-   
-   # NextAuth (for future authentication)
-   NEXTAUTH_SECRET="your-nextauth-secret-here"
-   NEXTAUTH_URL="http://localhost:3000"
-   ```
+### 3) Database (SQLite dev by default)
+```bash
+npx prisma db push
+npm run db:seed
+```
+This seeds a demo user and sample data.
 
-4. **Set up the database**
-   ```bash
-   # Generate Prisma client
-   npx prisma generate
-   
-   # Run database migrations
-   npx prisma migrate dev --name init
-   
-   # (Optional) Seed the database with sample data
-   npx prisma db seed
-   ```
+### 4) Start dev server
+```bash
+npm run dev
+```
+- If port 3000 is taken, Next uses 3001. Open the printed URL.
 
-5. **Start the development server**
-   ```bash
-   npm run dev
-   ```
+## 🔐 Authentication
 
-6. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+### What’s included
+- NextAuth configured with:
+  - Credentials provider (email/password)
+  - Google & GitHub OAuth
+- Prisma Adapter models (`Account`, `VerificationToken`) are in the schema
+- Session is JWT-based and wired into tRPC context
+- Protected routes via `/dashboard/layout.tsx` (redirects to `/login`)
 
-## 🏗️ Project Structure
+### Sign in
+- Credentials (seeded):
+  - Email: `demo@neoflo.com`
+  - Password: `password123`
+- Or use “Continue with Google/GitHub” (after configuring provider envs)
 
+### OAuth setup
+- Google
+  - Create OAuth Client (Web) in Google Cloud Console
+  - Authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
+- GitHub
+  - Create OAuth App in GitHub settings
+  - Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
+
+## 🧭 Project Structure (highlights)
 ```
 src/
-├── app/                          # Next.js App Router pages
-│   ├── actions/                  # Server actions (AI features)
-│   │   └── generateProposal.ts
-│   ├── api/trpc/                # tRPC API endpoint
-│   │   └── [trpc]/route.ts
-│   ├── dashboard/               # Dashboard pages
-│   │   ├── page.tsx            # Main dashboard
-│   │   └── projects/
-│   │       └── page.tsx        # Projects view
-│   ├── globals.css             # Global styles
-│   ├── layout.tsx              # Root layout with providers
-│   └── page.tsx                # Landing page
-├── components/                  # Reusable UI components
-│   ├── providers/              # Context providers
-│   │   └── trpc-provider.tsx
-│   └── ui/                     # shadcn/ui components
-├── lib/                        # Utility functions
-│   └── utils.ts
-├── server/                     # Backend API
-│   └── api/
-│       ├── routers/            # tRPC routers
-│       │   ├── client.ts
-│       │   └── project.ts
-│       └── root.ts             # tRPC app router
-├── trpc/                       # tRPC configuration
-│   ├── client.ts
-│   └── server.ts
-└── types/                      # TypeScript definitions
-
-prisma/
-└── schema.prisma               # Database schema
+├─ app/
+│  ├─ (auth)/
+│  │  ├─ login/page.tsx            # OAuth + credentials UI
+│  │  └─ register/page.tsx         # Credentials signup UI
+│  ├─ api/auth/[...nextauth]/route.ts  # NextAuth handler
+│  ├─ api/trpc/[trpc]/route.ts     # tRPC endpoint
+│  ├─ dashboard/
+│  │  ├─ layout.tsx               # Auth guard (redirects to /login)
+│  │  ├─ page.tsx                 # Dashboard
+│  │  ├─ clients/page.tsx         # Clients UI
+│  │  ├─ invoices/page.tsx        # Invoices UI
+│  │  └─ projects/page.tsx        # Projects UI
+│  ├─ actions/generateProposal.ts  # OpenAI proposal action
+│  ├─ layout.tsx                   # Root layout
+│  └─ page.tsx                     # Landing page
+├─ components/
+│  └─ providers/
+│     ├─ trpc-provider.tsx         # tRPC provider (client)
+│     └─ app-provider.tsx          # Session + tRPC (client)
+├─ server/
+│  └─ api/
+│     ├─ trpc.ts                    # tRPC context + primitives
+│     ├─ root.ts                    # appRouter merge
+│     └─ routers/
+│        ├─ client.ts
+│        ├─ invoice.ts
+│        └─ project.ts
+└─ lib/
+   └─ auth.ts                       # Legacy JWT utils (not used by NextAuth)
 ```
 
-## 🗄️ Database Schema
+## 🔌 API Endpoints (tRPC)
+- `project.create`, `project.getAllByClient`, `project.getById`, `project.updateStatus`
+- `client.create`, `client.getAll`
+- `invoice.create`, `invoice.getAll`, `invoice.getById`, `invoice.updateStatus`
 
-### Core Models
-
-- **User**: Freelancer accounts with authentication
-- **Client**: Client management with user relationships  
-- **Project**: Core project management with status tracking
-- **Invoice**: Billing and payment tracking
-
-### Key Features
-
-- **Relationships**: Proper foreign key relationships with cascade deletes
-- **Enums**: Status tracking for projects and invoices
-- **Timestamps**: Automatic created/updated timestamps
-- **Soft Deletes**: Data integrity with proper cleanup
-
-## 🔌 API Endpoints
-
-### Project Management
-- `POST /api/trpc/project.create` - Create new project
-- `GET /api/trpc/project.getAllByClient` - Get projects by client
-- `GET /api/trpc/project.getById` - Get specific project
-- `PUT /api/trpc/project.updateStatus` - Update project status
-
-### Client Management
-- `POST /api/trpc/client.create` - Create new client
-- `GET /api/trpc/client.getAll` - Get all clients
-
-### AI Features
-- `POST /api/actions/generateProposal` - Generate AI proposal
-
-## 🎯 Usage Examples
-
-### Creating a New Project
-
-```typescript
-// Using tRPC client
-const createProject = api.project.create.useMutation();
-
-createProject.mutate({
-  name: "Website Redesign",
-  description: "Modern responsive website for tech startup",
-  clientId: "client-id-here"
-});
-```
-
-### Generating AI Proposal
-
-```typescript
-// Using Server Action
-import { generateProposalScope } from "~/app/actions/generateProposal";
-
-const proposal = await generateProposalScope(
-  "Build a modern e-commerce platform with payment integration"
-);
-```
+## 🧯 Troubleshooting
+- Peer dependency conflicts:
+  - Always install with `npm install --legacy-peer-deps`
+- Port already in use:
+  - Next will switch to 3001; open the printed URL or stop the previous server
+- “React Context is unavailable in Server Components”:
+  - Providers must be client components. We wrap them in `AppProvider` and include that in `app/layout.tsx`.
+- “Cannot access 'createTRPCRouter' before initialization”:
+  - We split TRPC setup into `src/server/api/trpc.ts` to avoid circular imports.
+- 401/Not authenticated on tRPC:
+  - Sign in at `/login` first. `/dashboard` routes auto-redirect when unauthenticated.
 
 ## 🚀 Deployment
-
-### Vercel (Recommended)
-
-1. **Connect your repository** to Vercel
-2. **Set environment variables** in Vercel dashboard
-3. **Deploy** with automatic database migrations
-
-### Self-Hosted
-
-1. **Build the application**
-   ```bash
-   npm run build
-   ```
-
-2. **Start production server**
-   ```bash
-   npm start
-   ```
-
-3. **Set up PostgreSQL** database
-4. **Configure environment variables**
-5. **Run database migrations**
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 Development
-
-### Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-
-### Database Commands
-
-- `npx prisma generate` - Generate Prisma client
-- `npx prisma migrate dev` - Create and apply migrations
-- `npx prisma studio` - Open database GUI
-- `npx prisma db seed` - Seed database with sample data
-
-### Adding New Features
-
-1. **Database**: Update `prisma/schema.prisma`
-2. **API**: Add new router in `src/server/api/routers/`
-3. **UI**: Create components in `src/components/`
-4. **Pages**: Add routes in `src/app/`
-
-## 🔮 Roadmap
-
-### Phase 1: Core Features ✅
-- [x] Project management
-- [x] Client management
-- [x] Basic invoicing
-- [x] AI proposal generation
-
-### Phase 2: Advanced Features 🚧
-- [ ] User authentication
-- [ ] Advanced analytics
-- [ ] Time tracking
-- [ ] Expense management
-- [ ] Tax reporting
-
-### Phase 3: AI Enhancement 🤖
-- [ ] Project risk assessment
-- [ ] Automated invoice reminders
-- [ ] Revenue forecasting
-- [ ] Client communication automation
-
-### Phase 4: Enterprise Features 🏢
-- [ ] Team collaboration
-- [ ] Multi-currency support
-- [ ] Advanced reporting
-- [ ] API integrations
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Documentation**: [SETUP.md](SETUP.md) for detailed setup instructions
-- **Issues**: [GitHub Issues](https://github.com/your-repo/neoflo-erp/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-repo/neoflo-erp/discussions)
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org/) for the amazing framework
-- [tRPC](https://trpc.io/) for type-safe APIs
-- [Prisma](https://www.prisma.io/) for the excellent ORM
-- [shadcn/ui](https://ui.shadcn.com/) for beautiful components
-- [OpenAI](https://openai.com/) for AI capabilities
+- Set env vars (same names) in your hosting provider (e.g., Vercel)
+- Switch database to Postgres by updating `datasource db` in `prisma/schema.prisma` and setting `DATABASE_URL`
 
 ---
 
-**Built with ❤️ for freelancers everywhere**
+Built with ❤️ for freelancers.

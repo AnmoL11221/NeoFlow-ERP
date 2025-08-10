@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { projectListByClientInput } from "../contracts";
+import { prisma } from "~/lib/db";
 
 export const projectRouter = createTRPCRouter({
   create: protectedProcedure
@@ -32,28 +31,24 @@ export const projectRouter = createTRPCRouter({
     }),
 
   getAllByClient: protectedProcedure
-    .input(
-      z.object({
-        clientId: z.string().min(1, "Client ID is required"),
-      })
-    )
+    .input(projectListByClientInput)
     .query(async ({ input, ctx }) => {
       const userId = ctx.session!.user.id;
-      const projects = await prisma.project.findMany({
-        where: {
-          clientId: input.clientId,
-          userId,
-        },
-        include: {
-          client: true,
-          invoices: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
+      const { clientId, status, limit, cursor } = input;
+      const items = await prisma.project.findMany({
+        where: { clientId, userId, ...(status ? { status } : {}) },
+        include: { client: true, invoices: true },
+        orderBy: { createdAt: "desc" },
+        take: (limit ?? 20) + 1,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       });
 
-      return projects;
+      let nextCursor: string | undefined = undefined;
+      if (items.length > (limit ?? 20)) {
+        const next = items.pop();
+        nextCursor = next?.id;
+      }
+      return { items, nextCursor };
     }),
 
   getById: protectedProcedure

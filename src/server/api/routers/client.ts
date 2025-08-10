@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { clientListInput } from "../contracts";
+import { prisma } from "~/lib/db";
 
 export const clientRouter = createTRPCRouter({
   create: protectedProcedure
@@ -26,25 +25,29 @@ export const clientRouter = createTRPCRouter({
       return client;
     }),
 
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session!.user.id;
+  getAll: protectedProcedure
+    .input(clientListInput.optional())
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session!.user.id;
+      const limit = input?.limit ?? 20;
+      const cursor = input?.cursor ?? undefined;
 
-    const clients = await prisma.client.findMany({
-      where: {
-        userId: userId,
-      },
-      include: {
-        projects: {
-          orderBy: {
-            createdAt: "desc",
-          },
+      const clients = await prisma.client.findMany({
+        where: { userId },
+        include: {
+          projects: { orderBy: { createdAt: "desc" } },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+        orderBy: { createdAt: "desc" },
+        take: limit + 1,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      });
 
-    return clients;
-  }),
+      let nextCursor: string | undefined = undefined;
+      if (clients.length > limit) {
+        const next = clients.pop();
+        nextCursor = next?.id;
+      }
+
+      return { items: clients, nextCursor };
+    }),
 }); 

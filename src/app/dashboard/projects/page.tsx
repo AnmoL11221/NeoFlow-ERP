@@ -12,12 +12,17 @@ import {
 import { api } from "~/trpc/client";
 import { SlideUp } from "~/components/anim/SlideUp";
 import { FadeIn } from "~/components/anim/FadeIn";
+import { useState } from "react";
 
 export default function ProjectsPage() {
   const sampleClientId = "client-1";
-  const { data: projects, isLoading, error } = api.project.getAllByClient.useQuery({
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const { data, isLoading, isFetching, error, refetch } = api.project.getAllByClient.useQuery({
     clientId: sampleClientId,
+    limit: 10,
+    cursor,
   });
+  const projects = data?.items ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -77,7 +82,7 @@ export default function ProjectsPage() {
                     </div>
                   </div>
                 </FadeIn>
-              ) : projects && projects.length > 0 ? (
+              ) : projects.length > 0 ? (
                 <FadeIn>
                   <div className="overflow-x-auto">
                     <Table>
@@ -117,7 +122,7 @@ export default function ProjectsPage() {
                                 </span>
                               </TableCell>
                               <TableCell className="text-gray-600">
-                                {project.estimatedCost ? `$${project.estimatedCost.toLocaleString()}` : 'Not set'}
+                                {project.estimatedCost ? `$${Number(project.estimatedCost).toLocaleString()}` : 'Not set'}
                               </TableCell>
                               <TableCell className="text-gray-600">
                                 {new Date(project.createdAt).toLocaleDateString()}
@@ -147,6 +152,19 @@ export default function ProjectsPage() {
                         ))}
                       </TableBody>
                     </Table>
+                  </div>
+                  <div className="flex justify-center mt-6">
+                    {data?.nextCursor ? (
+                      <button
+                        disabled={isFetching}
+                        onClick={() => setCursor(data.nextCursor!)}
+                        className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        {isFetching ? "Loading..." : "Load more"}
+                      </button>
+                    ) : (
+                      <span className="text-sm text-gray-500">No more projects</span>
+                    )}
                   </div>
                 </FadeIn>
               ) : (

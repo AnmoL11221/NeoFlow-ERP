@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { FadeIn } from "~/components/anim/FadeIn";
+import { SlideUp } from "~/components/anim/SlideUp";
 
 export default function HomePage() {
   return (
@@ -46,47 +48,45 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              The AI-Powered
-              <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Freelancer ERP
-              </span>
-            </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed">
-              Streamline your freelance business with intelligent project management, 
-              automated invoicing, and AI-driven insights that help you focus on what matters most.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link 
-                href="/dashboard" 
-                className="px-8 py-4 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium text-lg"
-              >
-                Start Free Trial
-              </Link>
-              <Link 
-                href="/dashboard" 
-                className="px-8 py-4 border border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 transition-colors font-medium text-lg"
-              >
-                Watch Demo
-              </Link>
+          <FadeIn>
+            <div className="text-center mb-16">
+              <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                The AI-Powered
+                <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Freelancer ERP
+                </span>
+              </h1>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed">
+                Streamline your freelance business with intelligent project management, 
+                automated invoicing, and AI-driven insights that help you focus on what matters most.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link 
+                  href="/dashboard" 
+                  className="px-8 py-4 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium text-lg"
+                >
+                  Start Free Trial
+                </Link>
+                <Link 
+                  href="/dashboard" 
+                  className="px-8 py-4 border border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 transition-colors font-medium text-lg"
+                >
+                  Watch Demo
+                </Link>
+              </div>
             </div>
-          </div>
+          </FadeIn>
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900 mb-2">10x</div>
-              <div className="text-gray-600">Faster Project Scoping</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900 mb-2">50%</div>
-              <div className="text-gray-600">Reduced Admin Time</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900 mb-2">24/7</div>
-              <div className="text-gray-600">AI-Powered Insights</div>
-            </div>
+            {[0,1,2].map((i) => (
+              <SlideUp key={i} delay={i * 0.1}>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-gray-900 mb-2">{["10x","50%","24/7"][i]}</div>
+                  <div className="text-gray-600">{["Faster Project Scoping","Reduced Admin Time","AI-Powered Insights"][i]}</div>
+                </div>
+              </SlideUp>
+            ))}
           </div>
         </div>
       </section>
@@ -104,137 +104,31 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow bg-white">
-              <CardHeader className="pb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                </div>
-                <CardTitle className="text-xl">Smart Project Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  AI-powered project scoping, automated timeline generation, and intelligent risk assessment to keep your projects on track.
-                </p>
-                <Link 
-                  href="/dashboard/projects" 
-                  className="text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Learn more →
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow bg-white">
-              <CardHeader className="pb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                </div>
-                <CardTitle className="text-xl">Automated Invoicing</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Generate professional invoices automatically, track payments, and get real-time insights into your cash flow and profitability.
-                </p>
-                <Link 
-                  href="/dashboard/invoices" 
-                  className="text-green-600 hover:text-green-700 font-medium"
-                >
-                  Learn more →
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow bg-white">
-              <CardHeader className="pb-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                </div>
-                <CardTitle className="text-xl">AI-Powered Insights</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Get intelligent recommendations for pricing, project timelines, and business decisions based on your historical data.
-                </p>
-                <Link 
-                  href="/dashboard/analytics" 
-                  className="text-purple-600 hover:text-purple-700 font-medium"
-                >
-                  Learn more →
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow bg-white">
-              <CardHeader className="pb-4">
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <CardTitle className="text-xl">Client Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Organize client relationships, track communication history, and manage project portfolios all in one place.
-                </p>
-                <Link 
-                  href="/dashboard/clients" 
-                  className="text-orange-600 hover:text-orange-700 font-medium"
-                >
-                  Learn more →
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow bg-white">
-              <CardHeader className="pb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <CardTitle className="text-xl">Analytics & Reporting</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Comprehensive dashboards and reports to track your business performance, revenue trends, and project profitability.
-                </p>
-                <Link 
-                  href="/dashboard/analytics" 
-                  className="text-red-600 hover:text-red-700 font-medium"
-                >
-                  Learn more →
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow bg-white">
-              <CardHeader className="pb-4">
-                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <CardTitle className="text-xl">Lightning Fast</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Built with modern technologies for blazing fast performance, real-time updates, and seamless user experience.
-                </p>
-                <Link 
-                  href="/dashboard" 
-                  className="text-indigo-600 hover:text-indigo-700 font-medium"
-                >
-                  Learn more →
-                </Link>
-              </CardContent>
-            </Card>
+            {[0,1,2,3,4,5].map((i) => (
+              <SlideUp key={i} delay={0.1 + i * 0.05}>
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow bg-white">
+                  <CardHeader className="pb-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                    </div>
+                    <CardTitle className="text-xl">Smart Project Management</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 mb-4">
+                      AI-powered project scoping, automated timeline generation, and intelligent risk assessment to keep your projects on track.
+                    </p>
+                    <Link 
+                      href="/dashboard/projects" 
+                      className="text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      Learn more →
+                    </Link>
+                  </CardContent>
+                </Card>
+              </SlideUp>
+            ))}
           </div>
         </div>
       </section>

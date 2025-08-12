@@ -1,30 +1,55 @@
+"use client";
+
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { SlideUp } from "~/components/anim/SlideUp";
 import { FadeIn } from "~/components/anim/FadeIn";
+import { useState } from "react";
 
 export default function DashboardPage() {
+  const [showMenu, setShowMenu] = useState(false);
+  const [showBell, setShowBell] = useState(false);
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between relative">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
               <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your business.</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4 19h6v-6H4v6zM4 13h6V7H4v6zM4 1h6v6H4V1z" />
-                </svg>
-              </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4 19h6v-6H4v6zM4 13h6V7H4v6zM4 1h6v6H4V1z" />
-                </svg>
-              </button>
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <button
+                  onClick={() => setShowMenu((s) => !s)}
+                  className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800"
+                >
+                  New ▾
+                </button>
+                {showMenu && (
+                  <div className="absolute right-0 mt-2 w-44 rounded-md border bg-white shadow-md z-10">
+                    <Link className="block px-3 py-2 hover:bg-gray-50" href="/dashboard/projects">New Project</Link>
+                    <Link className="block px-3 py-2 hover:bg-gray-50" href="/dashboard/clients">New Client</Link>
+                    <Link className="block px-3 py-2 hover:bg-gray-50" href="/dashboard/invoices">New Invoice</Link>
+                  </div>
+                )}
+              </div>
+              <div className="relative">
+                <button
+                  onClick={() => setShowBell((s) => !s)}
+                  className="p-2 rounded-md border hover:bg-gray-50"
+                  aria-label="Notifications"
+                >
+                  🔔
+                </button>
+                {showBell && (
+                  <div className="absolute right-0 mt-2 w-64 rounded-md border bg-white shadow-md p-3 text-sm text-gray-700 z-10">
+                    <div className="font-medium mb-2">Notifications</div>
+                    <div>No new notifications</div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

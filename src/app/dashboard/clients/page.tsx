@@ -10,9 +10,33 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { api } from "~/trpc/client";
+import { useEffect, useState } from "react";
 
 export default function ClientsPage() {
-  const { data: clients, isLoading, error } = api.client.getAll.useQuery();
+  const [q, setQ] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(q), 300);
+    return () => clearTimeout(id);
+  }, [q]);
+
+  const { data, isLoading, isFetching, error, refetch } = api.client.getAll.useQuery({ q: debounced, cursor, limit: 10 });
+  const clients = data?.items ?? [];
+
+  // modal state
+  const [showModal, setShowModal] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const createClient = api.client.create.useMutation({
+    onSuccess: () => {
+      setShowModal(false);
+      setName("");
+      setEmail("");
+      setCursor(undefined);
+      refetch();
+    },
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -24,16 +48,17 @@ export default function ClientsPage() {
               <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
               <p className="text-gray-600 mt-1">Manage your client relationships and contact information</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <button className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
-                </svg>
-              </button>
-              <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
-                <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
+            <div className="flex items-center space-x-3">
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search clients"
+                className="rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              />
+              <button
+                onClick={() => setShowModal(true)}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+              >
                 Add Client
               </button>
             </div>
@@ -50,78 +75,9 @@ export default function ClientsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Clients</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {clients ? clients.length : 0}
-                  </p>
+                  <p className="text-2xl font-bold text-gray-900">{clients.length}</p>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Active Projects</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {clients ? clients.reduce((sum, client) => sum + client.projects.length, 0) : 0}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ${clients ? clients.reduce((sum, client) => 
-                      sum + client.projects.reduce((pSum, project) => 
-                        pSum + (project.estimatedCost || 0), 0
-                      ), 0
-                    ).toLocaleString() : 0}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">New This Month</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {clients ? clients.filter(client => {
-                      const createdAt = new Date(client.createdAt);
-                      const now = new Date();
-                      return createdAt.getMonth() === now.getMonth() && 
-                             createdAt.getFullYear() === now.getFullYear();
-                    }).length : 0}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg" />
               </div>
             </CardContent>
           </Card>
@@ -143,11 +99,7 @@ export default function ClientsPage() {
             ) : error ? (
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
-                  <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
+                  <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4" />
                   <p className="text-red-600 font-medium">Error loading clients</p>
                   <p className="text-gray-600 text-sm mt-1">{error.message}</p>
                 </div>
@@ -176,9 +128,7 @@ export default function ClientsPage() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-gray-600">
-                          {client.email}
-                        </TableCell>
+                        <TableCell className="text-gray-600">{client.email}</TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {client.projects.slice(0, 2).map((project) => (
@@ -194,29 +144,13 @@ export default function ClientsPage() {
                           </div>
                         </TableCell>
                         <TableCell className="text-gray-600">
-                          ${client.projects.reduce((sum, project) => sum + (project.estimatedCost || 0), 0).toLocaleString()}
+                          ${client.projects.reduce((sum, project) => sum + (Number(project.estimatedCost) || 0), 0).toLocaleString()}
                         </TableCell>
-                        <TableCell className="text-gray-600">
-                          {new Date(client.createdAt).toLocaleDateString()}
-                        </TableCell>
+                        <TableCell className="text-gray-600">{new Date(client.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
-                            <button className="p-1 text-gray-400 hover:text-purple-600 transition-colors">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </button>
-                            <button className="p-1 text-gray-400 hover:text-green-600 transition-colors">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
-                            </button>
-                            <button className="p-1 text-gray-400 hover:text-red-600 transition-colors">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
+                            <button className="p-1 text-gray-400 hover:text-purple-600 transition-colors">View</button>
+                            <button className="p-1 text-gray-400 hover:text-green-600 transition-colors">Edit</button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -225,25 +159,53 @@ export default function ClientsPage() {
                 </Table>
               </div>
             ) : (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No clients found</h3>
-                <p className="text-gray-600 mb-6">Get started by adding your first client.</p>
-                <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
-                  <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Add Client
-                </button>
-              </div>
+              <div className="text-center py-12">No clients found.</div>
             )}
+
+            <div className="flex justify-center mt-6">
+              {data?.nextCursor ? (
+                <button
+                  disabled={isFetching}
+                  onClick={() => setCursor(data.nextCursor!)}
+                  className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {isFetching ? "Loading..." : "Load more"}
+                </button>
+              ) : (
+                <span className="text-sm text-gray-500">End of list</span>
+              )}
+            </div>
           </CardContent>
         </Card>
       </main>
+
+      {showModal && (
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-md border bg-white p-4 shadow-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-lg font-semibold">Add Client</div>
+              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm text-gray-700">Name</label>
+                <input value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900" />
+              </div>
+              <div>
+                <label className="text-sm text-gray-700">Email</label>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900" />
+              </div>
+              <button
+                onClick={() => createClient.mutate({ name, email })}
+                disabled={createClient.isLoading || !name || !email}
+                className="w-full rounded-md bg-purple-600 text-white py-2.5 hover:bg-purple-700 disabled:opacity-50"
+              >
+                {createClient.isLoading ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

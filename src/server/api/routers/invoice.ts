@@ -37,27 +37,40 @@ export const invoiceRouter = createTRPCRouter({
       return invoice;
     }),
 
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session!.user.id;
+  getAll: protectedProcedure
+    .input(
+      z
+        .object({
+          status: z.enum(["DRAFT", "SENT", "PAID", "OVERDUE"]).nullish(),
+          cursor: z.string().nullish(),
+          limit: z.number().int().min(1).max(100).optional(),
+        })
+        .optional()
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session!.user.id;
+      const limit = input?.limit ?? 20;
+      const cursor = input?.cursor ?? undefined;
+      const status = input?.status ?? undefined;
 
-    const invoices = await prisma.invoice.findMany({
-      where: {
-        userId: userId,
-      },
-      include: {
-        project: {
-          include: {
-            client: true,
-          },
+      const invoices = await prisma.invoice.findMany({
+        where: { userId, ...(status ? { status } : {}) },
+        include: {
+          project: { include: { client: true } },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+        orderBy: { createdAt: "desc" },
+        take: limit + 1,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      });
 
-    return invoices;
-  }),
+      let nextCursor: string | undefined = undefined;
+      if (invoices.length > limit) {
+        const next = invoices.pop();
+        nextCursor = next?.id;
+      }
+
+      return { items: invoices, nextCursor };
+    }),
 
   getById: protectedProcedure
     .input(

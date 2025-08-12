@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { z } from "zod";
 import { prisma } from "~/lib/db";
 
 export const clientRouter = createTRPCRouter({
@@ -27,15 +26,32 @@ export const clientRouter = createTRPCRouter({
 
   getAll: protectedProcedure
     .input(
-      z.object({ cursor: z.string().nullish(), limit: z.number().int().min(1).max(100).optional() }).optional()
+      z
+        .object({
+          cursor: z.string().nullish(),
+          limit: z.number().int().min(1).max(100).optional(),
+          q: z.string().max(100).optional(),
+        })
+        .optional()
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session!.user.id;
       const limit = input?.limit ?? 20;
       const cursor = input?.cursor ?? undefined;
+      const q = input?.q?.trim();
 
       const clients = await prisma.client.findMany({
-        where: { userId },
+        where: {
+          userId,
+          ...(q
+            ? {
+                OR: [
+                  { name: { contains: q, mode: "insensitive" } },
+                  { email: { contains: q, mode: "insensitive" } },
+                ],
+              }
+            : {}),
+        },
         include: {
           projects: { orderBy: { createdAt: "desc" } },
         },

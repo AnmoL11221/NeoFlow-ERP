@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { clientListInput } from "../contracts";
+import { z } from "zod";
 import { prisma } from "~/lib/db";
 
 export const clientRouter = createTRPCRouter({
@@ -26,7 +26,9 @@ export const clientRouter = createTRPCRouter({
     }),
 
   getAll: protectedProcedure
-    .input(clientListInput.optional())
+    .input(
+      z.object({ cursor: z.string().nullish(), limit: z.number().int().min(1).max(100).optional() }).optional()
+    )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session!.user.id;
       const limit = input?.limit ?? 20;

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { projectListByClientInput } from "../contracts";
+import { z } from "zod";
 import { prisma } from "~/lib/db";
 
 export const projectRouter = createTRPCRouter({
@@ -31,7 +31,14 @@ export const projectRouter = createTRPCRouter({
     }),
 
   getAllByClient: protectedProcedure
-    .input(projectListByClientInput)
+    .input(
+      z.object({
+        clientId: z.string().min(1),
+        status: z.enum(["PROPOSED","ACTIVE","COMPLETED","PAUSED"]).nullish(),
+        cursor: z.string().nullish(),
+        limit: z.number().int().min(1).max(100).optional(),
+      })
+    )
     .query(async ({ input, ctx }) => {
       const userId = ctx.session!.user.id;
       const { clientId, status, limit, cursor } = input;

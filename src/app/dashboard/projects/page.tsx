@@ -17,12 +17,19 @@ import { useState } from "react";
 export default function ProjectsPage() {
   const sampleClientId = "client-1";
   const [cursor, setCursor] = useState<string | undefined>(undefined);
-  const { data, isLoading, isFetching, error, refetch } = api.project.getAllByClient.useQuery({
+  const { data, isLoading, isFetching, error } = api.project.getAllByClient.useQuery({
     clientId: sampleClientId,
     limit: 10,
     cursor,
   });
   const projects = data?.items ?? [];
+
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const matchMutation = api.match.runForProject.useMutation();
+  const { data: recos } = api.match.getForProject.useQuery(
+    selectedProjectId ? { projectId: selectedProjectId } : (undefined as any),
+    { enabled: !!selectedProjectId }
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -35,6 +42,16 @@ export default function ProjectsPage() {
                 <p className="text-gray-600 mt-1">Manage your projects and track their progress</p>
               </div>
               <div className="flex items-center space-x-4">
+                {selectedProjectId && (
+                  <button
+                    onClick={async () => {
+                      await matchMutation.mutateAsync({ projectId: selectedProjectId });
+                    }}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                  >
+                    {matchMutation.isLoading ? "Matching..." : "Find Freelancers"}
+                  </button>
+                )}
                 <button className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
@@ -99,7 +116,7 @@ export default function ProjectsPage() {
                       <TableBody>
                         {projects.map((project, idx) => (
                           <SlideUp key={project.id} delay={idx * 0.03}>
-                            <TableRow className="hover:bg-gray-50 transition-colors">
+                            <TableRow className={`hover:bg-gray-50 transition-colors ${selectedProjectId === project.id ? 'ring-2 ring-purple-200' : ''}`} onClick={() => setSelectedProjectId(project.id)}>
                               <TableCell className="font-medium text-gray-900">
                                 <div>
                                   <div className="font-semibold">{project.name}</div>
@@ -129,21 +146,8 @@ export default function ProjectsPage() {
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center space-x-2">
-                                  <button className="p-1 text-gray-400 hover:text-blue-600 transition-colors">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
-                                  </button>
-                                  <button className="p-1 text-gray-400 hover:text-green-600 transition-colors">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                  </button>
-                                  <button className="p-1 text-gray-400 hover:text-red-600 transition-colors">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
+                                  <button className="p-1 text-purple-600 hover:text-purple-700 transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedProjectId(project.id); }}>
+                                    Recommend
                                   </button>
                                 </div>
                               </TableCell>
@@ -166,6 +170,23 @@ export default function ProjectsPage() {
                       <span className="text-sm text-gray-500">No more projects</span>
                     )}
                   </div>
+
+                  {selectedProjectId && recos && (
+                    <div className="mt-10">
+                      <h2 className="text-xl font-semibold mb-3">Recommended Freelancers</h2>
+                      <ul className="space-y-3">
+                        {recos.map((r: any) => (
+                          <li key={r.id} className="p-4 border rounded-md bg-white flex items-start justify-between">
+                            <div>
+                              <div className="font-medium">{r.freelancer.name} <span className="text-sm text-gray-500">· {r.freelancer.skills}</span></div>
+                              <div className="text-sm text-gray-600 mt-1">{r.rationale}</div>
+                            </div>
+                            <div className="text-sm font-semibold">Score: {r.score.toFixed(2)}</div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </FadeIn>
               ) : (
                 <FadeIn>

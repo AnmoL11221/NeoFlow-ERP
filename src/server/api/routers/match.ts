@@ -25,6 +25,20 @@ export const matchRouter = createTRPCRouter({
       return recos;
     }),
 
+  shortlist: protectedProcedure
+    .input(z.object({ projectId: z.string().min(1), freelancerId: z.string().min(1), value: z.boolean() }))
+    .mutation(async ({ input, ctx }) => {
+      // Ensure ownership
+      const owns = await prisma.project.findFirst({ where: { id: input.projectId, userId: ctx.session!.user.id } });
+      if (!owns) throw new Error("Project not found");
+      const updated = await prisma.projectFreelancerRecommendation.update({
+        where: { projectId_freelancerId: { projectId: input.projectId, freelancerId: input.freelancerId } as any },
+        data: { shortlisted: input.value },
+        include: { freelancer: true },
+      });
+      return updated;
+    }),
+
   chatSuggest: protectedProcedure
     .input(z.object({ prompt: z.string().min(10, "Please provide more details (min 10 chars)") }))
     .mutation(async ({ input }) => {

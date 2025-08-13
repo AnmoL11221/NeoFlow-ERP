@@ -26,10 +26,11 @@ export default function ProjectsPage() {
 
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const matchMutation = api.match.runForProject.useMutation();
-  const { data: recos } = api.match.getForProject.useQuery(
+  const { data: recos, refetch: refetchRecos } = api.match.getForProject.useQuery(
     selectedProjectId ? { projectId: selectedProjectId } : (undefined as any),
     { enabled: !!selectedProjectId }
   );
+  const shortlistMutation = api.match.shortlist.useMutation({ onSuccess: () => refetchRecos() });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -44,25 +45,14 @@ export default function ProjectsPage() {
               <div className="flex items-center space-x-4">
                 {selectedProjectId && (
                   <button
-                    onClick={async () => {
-                      await matchMutation.mutateAsync({ projectId: selectedProjectId });
-                    }}
+                    onClick={async () => { await matchMutation.mutateAsync({ projectId: selectedProjectId }); refetchRecos(); }}
                     className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
                   >
                     {matchMutation.isLoading ? "Matching..." : "Find Freelancers"}
                   </button>
                 )}
-                <button className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
-                  </svg>
-                </button>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                  <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  New Project
-                </button>
+                <button className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors">Search</button>
+                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">New Project</button>
               </div>
             </div>
           </SlideUp>
@@ -89,11 +79,7 @@ export default function ProjectsPage() {
                 <FadeIn>
                   <div className="flex items-center justify-center py-12">
                     <div className="text-center">
-                      <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
+                      <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4" />
                       <p className="text-red-600 font-medium">Error loading projects</p>
                       <p className="text-gray-600 text-sm mt-1">{error.message}</p>
                     </div>
@@ -120,36 +106,19 @@ export default function ProjectsPage() {
                               <TableCell className="font-medium text-gray-900">
                                 <div>
                                   <div className="font-semibold">{project.name}</div>
-                                  <div className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                    {project.description.substring(0, 60)}...
-                                  </div>
+                                  <div className="text-sm text-gray-600 mt-1 line-clamp-2">{project.description.substring(0, 60)}...</div>
                                 </div>
                               </TableCell>
-                              <TableCell className="text-gray-600">
-                                {project.client?.name || 'Unknown Client'}
-                              </TableCell>
+                              <TableCell className="text-gray-600">{project.client?.name || 'Unknown Client'}</TableCell>
                               <TableCell>
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  project.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                                  project.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
-                                  project.status === 'PAUSED' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {project.status}
-                                </span>
+                                  project.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : project.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' : project.status === 'PAUSED' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                                }`}>{project.status}</span>
                               </TableCell>
-                              <TableCell className="text-gray-600">
-                                {project.estimatedCost ? `$${Number(project.estimatedCost).toLocaleString()}` : 'Not set'}
-                              </TableCell>
-                              <TableCell className="text-gray-600">
-                                {new Date(project.createdAt).toLocaleDateString()}
-                              </TableCell>
+                              <TableCell className="text-gray-600">{project.estimatedCost ? `$${Number(project.estimatedCost).toLocaleString()}` : 'Not set'}</TableCell>
+                              <TableCell className="text-gray-600">{new Date(project.createdAt).toLocaleDateString()}</TableCell>
                               <TableCell>
-                                <div className="flex items-center space-x-2">
-                                  <button className="p-1 text-purple-600 hover:text-purple-700 transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedProjectId(project.id); }}>
-                                    Recommend
-                                  </button>
-                                </div>
+                                <div className="flex items-center space-x-2"><button className="p-1 text-purple-600" onClick={(e) => { e.stopPropagation(); setSelectedProjectId(project.id); }}>Recommend</button></div>
                               </TableCell>
                             </TableRow>
                           </SlideUp>
@@ -159,13 +128,7 @@ export default function ProjectsPage() {
                   </div>
                   <div className="flex justify-center mt-6">
                     {data?.nextCursor ? (
-                      <button
-                        disabled={isFetching}
-                        onClick={() => setCursor(data.nextCursor!)}
-                        className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-                      >
-                        {isFetching ? "Loading..." : "Load more"}
-                      </button>
+                      <button disabled={isFetching} onClick={() => setCursor(data.nextCursor!)} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50">{isFetching ? "Loading..." : "Load more"}</button>
                     ) : (
                       <span className="text-sm text-gray-500">No more projects</span>
                     )}
@@ -181,7 +144,15 @@ export default function ProjectsPage() {
                               <div className="font-medium">{r.freelancer.name} <span className="text-sm text-gray-500">· {r.freelancer.skills}</span></div>
                               <div className="text-sm text-gray-600 mt-1">{r.rationale}</div>
                             </div>
-                            <div className="text-sm font-semibold">Score: {r.score.toFixed(2)}</div>
+                            <div className="flex items-center gap-3">
+                              <div className="text-sm font-semibold">Score: {r.score.toFixed(2)}</div>
+                              <button
+                                onClick={() => shortlistMutation.mutate({ projectId: selectedProjectId, freelancerId: r.freelancerId, value: !r.shortlisted })}
+                                className={`px-3 py-1 rounded-md text-sm ${r.shortlisted ? 'bg-green-600 text-white' : 'border'}`}
+                              >
+                                {r.shortlisted ? 'Shortlisted' : 'Shortlist'}
+                              </button>
+                            </div>
                           </li>
                         ))}
                       </ul>
@@ -190,21 +161,7 @@ export default function ProjectsPage() {
                 </FadeIn>
               ) : (
                 <FadeIn>
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
-                    <p className="text-gray-600 mb-6">Get started by creating your first project.</p>
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                      <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      Create Project
-                    </button>
-                  </div>
+                  <div className="text-center py-12">No projects found.</div>
                 </FadeIn>
               )}
             </CardContent>
